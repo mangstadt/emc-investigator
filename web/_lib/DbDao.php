@@ -76,7 +76,7 @@ class DbDao {
 				if (isset($json->players)){
 					$players = array();
 					foreach ($json->players as $player){
-						if ($x1 !== null && $z1 !== null && x2 !== null && z2 !== null){
+						if ($x1 !== null && $z1 !== null && $x2 !== null && $z2 !== null){
 							//if coordinates were provided, check to see if the player is within those coordinates
 							$x = $player->x;
 							$z = $player->z;
