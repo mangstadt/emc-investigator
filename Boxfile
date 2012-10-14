@@ -2,7 +2,10 @@ web1:
   name: emc-investigator
   document_root: web/
   php_extensions:
-    - mysqli
     - curl
     - zip
+    - mysqli	#phpMyAdmin
+    - mcrypt	#phpMyAdmin
+    - mysql		#phpMyAdmin
+    - mbstring	#phpMyAdmin
   php_date_timezone: "America/New_York"
