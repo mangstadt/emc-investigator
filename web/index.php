@@ -21,7 +21,6 @@ $twig = new Twig_Environment($loader, array(
 //$servers = array('smp1', 'smp2', 'smp3', 'smp4', 'smp5', 'smp6', 'smp7', 'smp8', 'smp9', 'utopia');
 $servers = array('smp7'); 
 
-$results = array();
 $errors = array();
 if (count($_GET) > 0){
 	//sanitize input
@@ -98,15 +97,15 @@ if (count($_GET) > 0){
 echo $twig->render('index.html', array(
 	'errors' => $errors,
 	'servers' => $servers,
-	'selectedServer' => $server,
-	'startTime' => $startTime,
-	'endTime' => $endTime,
-	'x1' => $x1,
-	'x2' => $x2,
-	'z1' => $z1,
-	'z2' => $z2,
-	'player' => $player,
-	'results' => $results,
+	'selectedServer' => @$server,
+	'startTime' => @$startTime,
+	'endTime' => @$endTime,
+	'x1' => @$x1,
+	'x2' => @$x2,
+	'z1' => @$z1,
+	'z2' => @$z2,
+	'player' => @$player,
+	'results' => @$results,
 ));
 
 ?>
