@@ -29,6 +29,7 @@ class DbDao {
 	
 	/**
 	 * @param string $server the server name (e.g. "smp7")
+	 * @param string $world the world to search over ("wilderness", "wilderness_nether", or "town")
 	 * @param int $startTime the start timestamp
 	 * @param int $endTime the end timestamp
 	 * @param int $x1 (optional) the x-coord of the upper-left corner
@@ -39,7 +40,9 @@ class DbDao {
 	 * @return array(ReadingResult) the results
 	 * @throws Exception if there's a database problem or a problem parsing the JSON
 	 */
-	public function getReadings($server, $startTime, $endTime, $x1 = null, $z1 = null, $x2 = null, $z2 = null, $searchPlayer = null){
+	public function getReadings($server, $world, $startTime, $endTime, $x1 = null, $z1 = null, $x2 = null, $z2 = null, $searchPlayer = null){
+		$world = strtolower($world);
+		
 		//get server ID
 		$serverId = $this->getServerId($server);
 		if ($serverId == null){
@@ -76,6 +79,11 @@ class DbDao {
 				if (isset($json->players)){
 					$players = array();
 					foreach ($json->players as $player){
+						//skip players who are not in the specified world
+						if (strtolower($player->world) != $world){
+							continue;
+						}
+						
 						if ($x1 !== null && $z1 !== null && $x2 !== null && $z2 !== null){
 							//if coordinates were provided, check to see if the player is within those coordinates
 							$x = $player->x;
