@@ -108,6 +108,15 @@ if (count($_GET) > 0){
 			background-color:#960;
 		}
 		
+		a.header:link, a.header:active, a.header:visited{
+			color: #fff;
+			text-decoration: none;
+		}
+		a.header:hover{
+			color: #fff;
+			text-decoration: none;
+		}
+		
 		a:link, a:active, a:visited{
 			color: #f90;
 			text-decoration: underline;
@@ -131,7 +140,7 @@ if (count($_GET) > 0){
 			<a href="https://github.com/mangstadt/emc-investigator" target="_blank" style="font-size:0.8em">http://www.github.com/mangstadt/emc-investigator</a>
 		</div>
 
-		<span style="font-size:3em; font-weight:bold;">EMC Investigator</span><br />
+		<a href="." class="header" style="font-size:3em; font-weight:bold;">EMC Investigator</a> <span style="color:yellow; font-size:2.0em;">[beta]</span><br />
 		<em>A griefer investigation tool for <a href="http://empire.us">Empire Minecraft</a></em><br />
 		by <a href="http://empireminecraft.com/members/shavingfoam.12110/">shavingfoam</a> (c) 2012<br />
 		<strong>Note:</strong> This tool cannot detect hidden players.
