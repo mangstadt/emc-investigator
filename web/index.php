@@ -76,7 +76,8 @@ if (count($_GET) > 0){
 	$player = @$_GET['player'];
 	
 	if (count($errors) == 0){
-		$dao = new DbDao('localhost', 'emc_investigator', 'root', 'root', 3306, "/tmp/mysql.sock");
+		$dao = new DbDao(getenv('DB_HOST'), getenv('DB_NAME'), getenv('DB_USER'), getenv('DB_PASS'));
+		//$dao = new DbDao('localhost', 'emc_investigator', 'root', 'root', null, "/tmp/mysql.sock"); //mac
 		$results = $dao->getReadings('smp7', $startTime, $endTime, $x1, $z1, $x2, $z2, $player);
 	}
 }
