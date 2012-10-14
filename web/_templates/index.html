@@ -118,9 +118,10 @@
 						<th style="cursor:pointer;">Player</th>
 						<th class="sorttable_nosort">(X,Z) [Y]</th>
 					</tr>
+					{% set count = 0 %}
 					{% for result in results %}
 						{% for player in result.players %}
-							{% if loop.index is odd %}
+							{% if count is odd %}
 								<tr class="oddRow">
 							{% else %}
 								<tr class="evenRow">
@@ -128,7 +129,8 @@
 							<td>{{ result.ts|date('Y-m-d H:i') }}</td>
 							<td><img onerror="this.style.display='none'" src="http://smp1.empire.us:8880/tiles/faces/16x16/{{ player.name|url_encode() }}.png" />{{ player.name }}</td>
 							<td>({{ player.x }}, {{ player.z }}), [{{ player.y }}]</td>
-						</tr>
+							</tr>
+							{% set count = count + 1 %}
 						{% endfor %}
 					{% endfor %}
 				</table>
