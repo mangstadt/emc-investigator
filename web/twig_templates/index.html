@@ -1,0 +1,148 @@
+{% from 'macros.html' import req %}
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>EMC Investigator</title>
+		
+		<!-- http://www.kryogenix.org/code/browser/sorttable/ -->
+		<script type="text/javascript" src="_js/sorttable.js"></script>
+		
+		<style>
+		body{
+			color:#fff;
+			background-color:#000;
+		}
+		
+		table{
+			color:#fff;
+		}
+		
+		tr.evenRow{
+			background-color:none;
+		}
+		
+		tr.oddRow{
+			background-color:#960;
+		}
+		
+		a.header:link, a.header:active, a.header:visited{
+			color: #fff;
+			text-decoration: none;
+		}
+		a.header:hover{
+			color: #fff;
+			text-decoration: none;
+		}
+		
+		a:link, a:active, a:visited{
+			color: #f90;
+			text-decoration: underline;
+		}
+		a:hover{
+			color: #960;
+			text-decoration: none;
+		}
+		</style>
+	</head>
+	<body>
+		<div style="position:fixed; right:10px; top:10px;">
+			<a href="http://empire.us"><img src="images/emc-logo.png" border="0" /></a><br />
+			<a href="https://sites.google.com/site/emclastlightoutpost/"><img src="images/llo-logo.png" border="0" /></a><br /><br />
+			<div style="text-align:center; font-size:0.8em; padding:20px 0px 20px 0px; background-color:#333; cursor:pointer;" onclick="window.scrollTo(0,0)">
+				[<a href="#">scroll to top</a>]
+			</div>
+		</div>
+		
+		<div style="position:fixed; right:10px; bottom:10px;">
+			<a href="https://github.com/mangstadt/emc-investigator" target="_blank" style="font-size:0.8em">http://www.github.com/mangstadt/emc-investigator</a>
+		</div>
+
+		<a href="." class="header" style="font-size:3em; font-weight:bold;">EMC Investigator</a> <span style="color:yellow; font-size:2.0em;">[beta]</span><br />
+		<em>A griefer investigation tool for <a href="http://empire.us">Empire Minecraft</a></em><br />
+		by <a href="http://empireminecraft.com/members/shavingfoam.12110/">shavingfoam</a> (c) 2012<br />
+		<strong>Note:</strong> This tool cannot detect hidden players.
+		<hr />
+		
+		<form action="." method="get">
+{% if errors|length > 0 %}
+			<div style="color:red">
+				<ul>
+{% for error in errors %}
+					<li>{{ error }}</li>
+{% endfor %}
+				</ul>
+			</div>
+{% endif %}
+			
+			<em>{{ req() }} = required</em>
+			
+			<div style="padding-top:10px">
+				Server{{ req() }}:
+				<select name="server">
+{% for server in servers %}
+{% if server == selectedServer %}
+					<option selected>{{ server }}</option>
+{% else %}
+					<option>{{ server }}</option>
+{% endif %}
+{% endfor %}
+				</select>
+			</div>
+			
+			<div style="padding-top:10px">
+				Start time{{ req() }}: <input type="text" name="startTime" value="{{ startTime }}" /> <em>(format: YYYY-MM-DD HH:MM)</em>
+			</div>
+			<div>
+				End time{{ req() }}: <input type="text" name="endTime" value="{{ endTime }}" />  <em>(format: YYYY-MM-DD HH:MM)</em>
+			</div>
+			<div style="padding-top:10px">
+				Upper-left coords:<br />
+				X: <input type="text" name="x1" size="10" value="{{ x1 }}" /> Z: <input type="text" name="z1" size="10" value="{{ z1 }}" />
+			</div>
+			<div>
+				Bottom-right coords:<br />
+				X: <input type="text" name="x2" size="10" value="{{ x2 }}" /> Z: <input type="text" name="z2" size="10" value="{{ z2 }}" />
+			</div>
+			<div style="padding-top:10px">
+				Player: <input type="text" name="player" value="{{ player }}" /> <em>(can be partial name)</em>
+			</div>
+			<input type="submit" value="Search" />
+		</form>
+
+{% if results|length > 0 %}
+		<h1>Results</h1>
+		<div>
+			<table cellpadding="5" class="sortable" id="resultsTable">
+				<tr>
+					<th style="cursor:pointer;" id="timeCol">Time (GMT-5)</th>
+					<th style="cursor:pointer;">Player</th>
+					<th class="sorttable_nosort">(X,Z) [Y]</th>
+				</tr>
+{% for result in results %}
+{% for player in result.players %}
+{% if loop.index is odd %}
+				<tr class="oddRow">
+{% else %}
+				<tr class="evenRow">
+{% endif %}
+					<td>{{ result.ts|date('Y-m-d H:i') }}</td>
+					<td><img onerror="this.style.display='none'" src="http://smp1.empire.us:8880/tiles/faces/16x16/{{ player.name|url_encode() }}.png" />{{ player.name }}</td>
+					<td>({{ player.x }}, {{ player.z }}), [{{ player.y }}]</td>
+				</tr>
+{% endfor %}
+{% endfor %}
+			</table>
+		</div>
+{% endif %}
+
+		<script>
+		var table = document.getElementById('resultsTable');
+		table.afterSort = function(){
+			for (var i = 1; i < table.rows.length; i++){
+				var row = table.rows[i];
+				row.className = (i % 2 == 0) ? 'evenRow' : 'oddRow';
+			}
+		};
+		</script>
+	</body>
+</html>
