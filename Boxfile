@@ -9,3 +9,5 @@ web1:
     - mysql		#phpMyAdmin
     - mbstring	#phpMyAdmin
   php_date_timezone: "America/New_York"
+  shared_writable_dirs:
+    - twig_cache
