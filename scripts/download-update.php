@@ -15,13 +15,13 @@ spl_autoload_register(function ($class) {
 $stderr = fopen("php://stderr", "w");
 
 //parse the command line arguments
-$args = new Args("o:n:s:w:t:ph", array("output:", "name:", "server:", "world:", "timestamp:", "db:", "repeat:", "config:", "prettyPrint", "compress:", "stdout", "help"), array(null, "config"));
+$args = new Args("o:n:s:w:t:ph", array("output:", "name:", "server:", "world:", "timestamp:", "db", "repeat:", "config:", "prettyPrint", "compress:", "stdout", "help"), array(null, "config"));
 
 //print usage
 if ($args->exists('h', 'help')){
 	$scriptName = $argv[0];
 	echo <<<USAGE
-EMC Livemap Data Retriever
+EMC Live Map Player Data Retriever
 by shavingfoam
 
 usage:   php $scriptName ARGS
@@ -47,15 +47,15 @@ Arguments
 
 --compress=COMPRESS
   Compresses the JSON files, grouping them together by day.
-  Valid options are: zip
+  Valid options are: zip, tar, tar.gz, tar.bz2
 
 -n FORMAT, --name=FORMAT
   The name to give the JSON file. Timestamps can be inserted into the
   file name. Just enclose a date format string in brackets.
   DEFAULTS to "update-{Ymd_His}.json".
 
---db=HOST,DATABASE,USERNAME,PASSWORD
-  Persist the JSON data in a database.
+--db
+  Persist the JSON data in the database.
 
 --stdout
   Prints the JSON data to stdout.
@@ -144,16 +144,12 @@ if ($compress != null){
 $stdout = $args->exists(null, 'stdout');
 
 //get DB info
-$db = $args->value(null, 'db');
-if ($db != null){
-	$db = preg_split("/,/", $db, 4);
-	$dbHost = $db[0];
-	$dbDatabase = $db[1];
-	$dbUsername = $db[2];
-	$dbPassword = $db[3];
+if ($args->exists(null, 'db')){
+	$dbHost = getenv('DB_HOST');
+	$dbDatabase = getenv('DB_NAME');
+	$dbUsername = getenv('DB_USER');
+	$dbPassword = getenv('DB_PASS');
 }
-
-$lockFile = "$outputDir/lock";
 
 //create API object
 $api = new EmcMapApi($server, $world);
@@ -188,14 +184,19 @@ for ($curRepeatCount = 0; $curRepeatCount < $repeatCount; $curRepeatCount++){
 		//save JSON to disk
 		if ($compress != null){
 			$archiveFile = $outputDir . '/updates-' . date('Ymd') . '.' . $compress;
-	
-			//get lock for the folder
-			if (file_exists($lockFile)){
-				$fp = fopen($lockFile, 'r');
-				flock($fp, LOCK_EX);
-			}
 
-			if ($compress == 'zip'){
+			if (strpos($compress, "tar") === 0){
+				//see: http://pear.php.net/package/Archive_Tar
+				require_once 'Archive/Tar.php';
+				
+				$dotPos = strpos($compress, '.');
+				$tarType = null;
+				if ($dotPos !== false){
+					$tarType = substr($compress, $dotPos+1);
+				}
+				$tar = new Archive_Tar($archiveFile, $tarType);
+				$tar->addString($jsonFileName, $jsonStr);
+			} else if ($compress == 'zip'){
 				$zip = new ZipArchive();
 				if (file_exists($archiveFile)){
 					$zip->open($archiveFile);
@@ -208,11 +209,6 @@ for ($curRepeatCount = 0; $curRepeatCount < $repeatCount; $curRepeatCount++){
 				fputs($stderr, "Unknown compression type: $compress\n");
 				exit(1);
 			}
-	
-			//unlock
-			if (isset($fp)){
-				flock($fp, LOCK_UN);
-			}
 		} else {
 			file_put_contents("$outputDir/$jsonFileName", $jsonStr);
 		}
@@ -221,33 +217,42 @@ for ($curRepeatCount = 0; $curRepeatCount < $repeatCount; $curRepeatCount++){
 	//save to DB
 	if (isset($dbHost)){
 		$mysqli = new mysqli($dbHost, $dbUsername, $dbPassword, $dbDatabase);
+		//$mysqli = new mysqli('localhost', 'root', 'root', 'emc_investigator', 3306, '/tmp/mysql.sock'); //Mac
 		if ($mysqli->connect_errno) {
 			throw new Exception('Connect Error (' . $mysqli->connect_errno . ') ' . $mysqli->connect_error);
 		}
 
-		//get id for SMP7 server
-		$result = $mysqli->query("SELECT id from servers WHERE name = 'smp7'");
-		if ($result->num_rows == 0){
-			$mysqli->query("INSERT INTO servers (id, name) VALUES (7, 'smp7')");
-			$serverId = $mysqli->insert_id;
+		//get id for server
+		$sql = "SELECT id from servers WHERE name = '" . $mysqli->real_escape_string($server) . "'";
+		$result = $mysqli->query($sql);
+		if ($result === false){
+			fputs($stderr, "Error: Problem running query: $sql\n");
+			exit(1);
+		} else if ($result->num_rows == 0){
+			fputs($stderr, "Error: Server \"$server\" is not in the database (add a row to \"servers\" table).\n");
+			exit(1);
 		} else {
 			$rows = $result->fetch_array();
 			$serverId = $rows[0];
 		}
 
-		//get id for wilderness world
-		$result = $mysqli->query("SELECT id from worlds WHERE name = 'wilderness'");
-		if ($result->num_rows == 0){
-			$mysqli->query("INSERT INTO worlds (name) VALUES ('wilderness')");
-			$worldId = $mysqli->insert_id;
+		//get id for world
+		$sql = "SELECT id from worlds WHERE name = '" . $mysqli->real_escape_string($world) . "'";
+		$result = $mysqli->query($sql);
+		if ($result === false){
+			fputs($stderr, "Error: Problem running query: $sql\n");
+			exit(1);
+		} else if ($result->num_rows == 0){
+			fputs($stderr, "Error: World \"$world\" is not in the database (add a row to \"worlds\" table).\n");
+			exit(1);
 		} else {
 			$rows = $result->fetch_array();
 			$worldId = $rows[0];
 		}
 	
-		$stmt = $mysqli->prepare("INSERT INTO readings (ts, json, server_id, world_id) VALUES (?, ?, $serverId, $worldId)");
+		$stmt = $mysqli->prepare("INSERT INTO readings (ts, json, server_id, world_id) VALUES (?, ?, ?, ?)");
 		$ts = date('Y-m-d H:i:s');
-		$stmt->bind_param('ss', $ts, $jsonStr);
+		$stmt->bind_param('ssii', $ts, $jsonStr, $serverId, $worldId);
 		$stmt->execute();
 	}
 
