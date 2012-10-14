@@ -8,6 +8,9 @@ spl_autoload_register(function ($class) {
 	}
 });
 
+// Composer auto-loader
+require_once __DIR__ . '/vendor/autoload.php';
+
 //$servers = array('smp1', 'smp2', 'smp3', 'smp4', 'smp5', 'smp6', 'smp7', 'smp8', 'smp9', 'utopia');
 $servers = array('smp7'); 
 
