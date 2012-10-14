@@ -64,28 +64,28 @@
 		<hr />
 		
 		<form action="." method="get">
-{% if errors|length > 0 %}
-			<div style="color:red">
-				<ul>
-{% for error in errors %}
-					<li>{{ error }}</li>
-{% endfor %}
-				</ul>
-			</div>
-{% endif %}
+			{% if errors|length > 0 %}
+				<div style="color:red">
+					<ul>
+						{% for error in errors %}
+							<li>{{ error }}</li>
+						{% endfor %}
+					</ul>
+				</div>
+			{% endif %}
 			
 			<em>{{ req() }} = required</em>
 			
 			<div style="padding-top:10px">
 				Server{{ req() }}:
 				<select name="server">
-{% for server in servers %}
-{% if server == selectedServer %}
-					<option selected>{{ server }}</option>
-{% else %}
-					<option>{{ server }}</option>
-{% endif %}
-{% endfor %}
+					{% for server in servers %}
+						{% if server == selectedServer %}
+							<option selected>{{ server }}</option>
+						{% else %}
+							<option>{{ server }}</option>
+						{% endif %}
+					{% endfor %}
 				</select>
 			</div>
 			
@@ -109,31 +109,31 @@
 			<input type="submit" value="Search" />
 		</form>
 
-{% if results|length > 0 %}
-		<h1>Results</h1>
-		<div>
-			<table cellpadding="5" class="sortable" id="resultsTable">
-				<tr>
-					<th style="cursor:pointer;" id="timeCol">Time (GMT-5)</th>
-					<th style="cursor:pointer;">Player</th>
-					<th class="sorttable_nosort">(X,Z) [Y]</th>
-				</tr>
-{% for result in results %}
-{% for player in result.players %}
-{% if loop.index is odd %}
-				<tr class="oddRow">
-{% else %}
-				<tr class="evenRow">
-{% endif %}
-					<td>{{ result.ts|date('Y-m-d H:i') }}</td>
-					<td><img onerror="this.style.display='none'" src="http://smp1.empire.us:8880/tiles/faces/16x16/{{ player.name|url_encode() }}.png" />{{ player.name }}</td>
-					<td>({{ player.x }}, {{ player.z }}), [{{ player.y }}]</td>
-				</tr>
-{% endfor %}
-{% endfor %}
-			</table>
-		</div>
-{% endif %}
+		{% if results|length > 0 %}
+			<h1>Results</h1>
+			<div>
+				<table cellpadding="5" class="sortable" id="resultsTable">
+					<tr>
+						<th style="cursor:pointer;" id="timeCol">Time (GMT-5)</th>
+						<th style="cursor:pointer;">Player</th>
+						<th class="sorttable_nosort">(X,Z) [Y]</th>
+					</tr>
+					{% for result in results %}
+						{% for player in result.players %}
+							{% if loop.index is odd %}
+								<tr class="oddRow">
+							{% else %}
+								<tr class="evenRow">
+							{% endif %}
+							<td>{{ result.ts|date('Y-m-d H:i') }}</td>
+							<td><img onerror="this.style.display='none'" src="http://smp1.empire.us:8880/tiles/faces/16x16/{{ player.name|url_encode() }}.png" />{{ player.name }}</td>
+							<td>({{ player.x }}, {{ player.z }}), [{{ player.y }}]</td>
+						</tr>
+						{% endfor %}
+					{% endfor %}
+				</table>
+			</div>
+		{% endif %}
 
 		<script>
 		var table = document.getElementById('resultsTable');
