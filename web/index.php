@@ -13,8 +13,8 @@ require_once __DIR__ . '/_lib/Twig/Autoloader.php';
 Twig_Autoloader::register();
 $loader = new Twig_Loader_Filesystem(__DIR__ . '/_templates');
 $twig = new Twig_Environment($loader, array(
-    //'cache' => __DIR__ . '/twig_cache',
-	'cache' => getenv('TWIG_CACHE'),
+    'cache' => __DIR__ . '/twig_cache',
+	//'cache' => getenv('TWIG_CACHE'),
 	'auto_reload' => false, // Set to 'off' in production
 ));
 
