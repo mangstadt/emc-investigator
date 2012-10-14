@@ -1,0 +1,8 @@
+web1:
+  name: emc-investigator
+  document_root: web/
+  php_extensions:
+    - mysqli
+    - curl
+    - zip
+  php_date_timezone: "America/New_York"
