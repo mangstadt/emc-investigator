@@ -87,6 +87,17 @@
 						{% endif %}
 					{% endfor %}
 				</select>
+				
+				World{{ req() }}:
+				<select name="world">
+					{% for value,display in worlds %}
+						{% if value == selectedWorld %}
+							<option value="{{ value }}" selected>{{ display }}</option>
+						{% else %}
+							<option value="{{ value }}">{{ display }}</option>
+						{% endif %}
+					{% endfor %}
+				</select>
 			</div>
 			
 			<div style="padding-top:10px">

@@ -17,7 +17,12 @@ $twig = new Twig_Environment($loader, array(
 	'auto_reload' => Env::$twigAutoReload,
 ));
 
-$servers = array('smp1', 'smp2', 'smp3', 'smp4', 'smp5', 'smp6', 'smp7', 'smp8', 'smp9', 'utopia'); 
+$servers = array('smp1', 'smp2', 'smp3', 'smp4', 'smp5', 'smp6', 'smp7', 'smp8', 'smp9', 'utopia');
+$worlds = array(
+	'wilderness'=>'wild',
+	'wilderness_nether'=>'nether',
+	'town'=>'town'
+);
 
 $errors = array();
 if (count($_GET) > 0){
@@ -33,6 +38,7 @@ if (count($_GET) > 0){
 	}
 	
 	$server = @$_GET['server'];
+	$world = @$_GET['world'];
 	$startTime = @$_GET['startTime'];
 	$endTime = @$_GET['endTime'];
 	$x1 = @$_GET['x1'];
@@ -45,6 +51,12 @@ if (count($_GET) > 0){
 		$errors[] = 'Please select a server.';
 	} else if (!in_array($server, $servers)){
 		$errors[] = 'Invalid server selected.';
+	}
+
+	if ($world == null){
+		$errors[] = 'Please select a world.';
+	} else if (!isset($worlds[$world])){
+		$errors[] = 'Invalid world selected.';
 	}
 	
 	if ($startTime === null || $endTime === null) {
@@ -92,17 +104,20 @@ if (count($_GET) > 0){
 
 	if (count($errors) == 0){
 		$dao = new DbDao(Env::$dbHost, Env::$dbName, Env::$dbUser, Env::$dbPass, Env::$dbPort);
-		$results = $dao->getReadings($server, 'wilderness', $startTimeTs, $endTimeTs, $x1, $z1, $x2, $z2, $player);
+		$results = $dao->getReadings($server, $world, $startTimeTs, $endTimeTs, $x1, $z1, $x2, $z2, $player);
 	}
 } else {
 	//set default form values
 	$server = 'smp7';
+	$world = 'wilderness';
 }
 
 echo $twig->render('index.html', array(
 	'errors' => $errors,
 	'servers' => $servers,
 	'selectedServer' => $server,
+	'worlds'=> $worlds,
+	'selectedWorld' => $world,
 	'startTime' => @$startTime,
 	'endTime' => @$endTime,
 	'x1' => @$x1,
