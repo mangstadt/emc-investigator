@@ -13,9 +13,8 @@ require_once __DIR__ . '/_lib/Twig/Autoloader.php';
 Twig_Autoloader::register();
 $loader = new Twig_Loader_Filesystem(__DIR__ . '/_templates');
 $twig = new Twig_Environment($loader, array(
-    'cache' => '../twig_cache',
-	//'cache' => getenv('TWIG_CACHE'),
-	'auto_reload' => false, // Set to 'off' in production
+    'cache' => Env::$twigCache,
+	'auto_reload' => Env::$twigAutoReload,
 ));
 
 //$servers = array('smp1', 'smp2', 'smp3', 'smp4', 'smp5', 'smp6', 'smp7', 'smp8', 'smp9', 'utopia');
@@ -87,9 +86,7 @@ if (count($_GET) > 0){
 	}
 
 	if (count($errors) == 0){
-		$dao = new DbDao(getenv('DB_HOST'), getenv('DB_NAME'), getenv('DB_USER'), getenv('DB_PASS'));
-		//$dao = new DbDao('localhost', 'emc_investigator', 'root', 'root', null, "/tmp/mysql.sock"); //mac
-		//$dao = new DbDao('localhost', 'emc_investigator', 'root', 'root'); //netbook
+		$dao = new DbDao(Env::$dbHost, Env::$dbName, Env::$dbUser, Env::$dbPass, Env::$dbPort);
 		$results = $dao->getReadings('smp7', 'wilderness', $startTimeTs, $endTimeTs, $x1, $z1, $x2, $z2, $player);
 	}
 }
