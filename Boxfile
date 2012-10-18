@@ -11,6 +11,8 @@ web1:
   php_date_timezone: "America/New_York"
   shared_writable_dirs:
     - twig_cache
+  after_deploy:
+    - "rm -rf twig_cache/*"
 
 db1:
   name: emc-investigator
