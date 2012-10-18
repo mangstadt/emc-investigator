@@ -1,4 +1,5 @@
 {% from 'macros.html' import req %}
+{% from 'macros.html' import hitCounter %}
 <!DOCTYPE html>
 <html>
 	<head>
@@ -157,5 +158,7 @@
 			}
 		};
 		</script>
+
+		{{ hitCounter(enableHitCounter) }}
 	</body>
 </html>

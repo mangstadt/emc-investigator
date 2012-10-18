@@ -113,6 +113,7 @@ if (count($_GET) > 0){
 }
 
 echo $twig->render('index.html', array(
+	'enableHitCounter' => Env::$enableHitCounter,
 	'errors' => $errors,
 	'servers' => $servers,
 	'selectedServer' => $server,

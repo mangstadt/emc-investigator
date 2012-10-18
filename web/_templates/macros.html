@@ -3,3 +3,19 @@
 	<span style="color:red">*</span>
 {% endspaceless %}
 {% endmacro %}
+
+{% macro hitCounter(enabled) %}
+	{% if enabled %}
+		<script type="text/javascript">
+			var sc_project=8388389; 
+			var sc_invisible=1; 
+			var sc_security="392ae52c"; 
+		</script>
+		<script type="text/javascript" src="http://www.statcounter.com/counter/counter.js"></script>
+		<noscript>
+			<div class="statcounter">
+			<a title="web statistics" href="http://statcounter.com/" target="_blank"><img class="statcounter" src="http://c.statcounter.com/8388389/0/392ae52c/1/" alt="web statistics" /></a>
+			</div>
+		</noscript>
+	{% endif %}
+{% endmacro %}
