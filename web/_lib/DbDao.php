@@ -88,7 +88,9 @@ class DbDao {
 							//if coordinates were provided, check to see if the player is within those coordinates
 							$x = $player->x;
 							$z = $player->z;
-							$matchedCoords = $x >= $x1 && $x <= $x2 && $z >= $z1 && $z <= $z2;
+							$matchedCoords = 
+							($x1 <= $x && $x <= $x2 || $x2 <= $x && $x <= $x1) &&
+							($z1 <= $z && $z <= $z2 || $z2 <= $z && $z <= $z1);
 						} else {
 							$matchedCoords = true;
 						}

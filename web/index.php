@@ -80,25 +80,16 @@ if (count($_GET) > 0){
 			$coordsEntered++;
 		}
 	}
-	if ($coordsEntered > 0 && $coordsEntered < 4){
-		$errors[] = 'Some coordinates are missing values.';
-	} else if ($coordsEntered == 4){
-		$numeric = true;
-		foreach ($coords as $coord){
-			if (!preg_match('/^-?\\d+$/', $coord)){
-				$errors[] = 'Coordinates must be numeric and without decimals.';
-				$numeric = false;
-				break;
-			}
-		}
-		
-		if ($numeric){
-			if ($x1 > $x2){
-				$errors[] = 'X1 must be less than X2';
-			}
-			if ($z1 > $z2){
-				$errors[] = 'Z1 must be less than Z2';
-			}
+	if ($coordsEntered > 0){
+		if ($coordsEntered == 4){
+			foreach ($coords as $coord){
+				if (!preg_match('/^-?\\d+$/', $coord)){
+					$errors[] = 'Coordinates must be numeric and without decimals.';
+					break;
+				}
+			}	
+		} else {
+			$errors[] = 'Some coordinates are missing values.';
 		}
 	}
 

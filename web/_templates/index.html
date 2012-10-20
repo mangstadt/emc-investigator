@@ -212,12 +212,9 @@
 				End time{{ req() }}: <input type="text" name="endTime" id="endTime" value="{{ endTime }}" onblur="checkTime(this)" />  <em>(format: YYYY-MM-DD HH:MM)</em>
 			</div>
 			<div style="padding-top:10px">
-				Upper-left coords:<br />
-				X: <input type="text" name="x1" id="x1" size="10" value="{{ x1 }}" onblur="checkCoord(this)" /> Z: <input type="text" name="z1" id="z1" size="10" value="{{ z1 }}" onblur="checkCoord(this)" />
-			</div>
-			<div>
-				Bottom-right coords:<br />
-				X: <input type="text" name="x2" id="x2" size="10" value="{{ x2 }}" onblur="checkCoord(this)" /> Z: <input type="text" name="z2" id="z2" size="10" value="{{ z2 }}" onblur="checkCoord(this)" />
+				Bounded area coords: <em>(the two opposite corners of the rectangle)</em><br />
+				X1: <input type="text" name="x1" id="x1" size="10" value="{{ x1 }}" onblur="checkCoord(this)" /> Z1: <input type="text" name="z1" id="z1" size="10" value="{{ z1 }}" onblur="checkCoord(this)" /><br />
+				X2: <input type="text" name="x2" id="x2" size="10" value="{{ x2 }}" onblur="checkCoord(this)" /> Z2: <input type="text" name="z2" id="z2" size="10" value="{{ z2 }}" onblur="checkCoord(this)" />
 			</div>
 			<div style="padding-top:10px">
 				Player: <input type="text" name="player" value="{{ player }}" /> <em>(can be partial name)</em>
