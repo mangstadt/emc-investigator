@@ -8,6 +8,105 @@
 		<!-- http://www.kryogenix.org/code/browser/sorttable/ -->
 		<script type="text/javascript" src="_js/sorttable.js"></script>
 		
+		<script>
+		function validate(form){
+			var errors = [];
+			
+			var coordIds = ["x1", "z1", "x2", "z2"];
+			var coordsEntered = 0;
+			for (var i = 0; i < coordIds.length; i++){
+				var textBox = document.getElementById(coordIds[i]);
+				var value = textBox.value.trim();
+				if (value != ""){
+					coordsEntered++;
+				}
+			}
+			if (coordsEntered > 0){
+				if (coordsEntered < 4){
+					errors.push("Some coordinates are missing values.");
+				}
+				for (var i = 0; i < coordIds.length; i++){
+					var textBox = document.getElementById(coordIds[i]);
+					var value = textBox.value.trim();
+					if (value != "" && !isCoord(value)){
+						errors.push("Coordinates must be numeric and without decimals.");
+						break;
+					}
+				}
+			}
+			
+			var startTime = document.getElementById('startTime').value.trim();
+			var startTimeTs = Date.parse(startTime);
+			if (startTime == ""){
+				errors.push("Start time required.");
+			} else {
+				if (isNaN(startTimeTs)){
+					errors.push("Invalid start time.");
+				}
+			}
+			
+			var endTime = document.getElementById('endTime').value.trim();
+			var endTimeTs = Date.parse(endTime);
+			if (endTime == ""){
+				errors.push("End time required.");
+			} else {
+				if (isNaN(endTimeTs)){
+					errors.push("Invalid end time.");
+				}
+			}
+
+			if (!isNaN(startTimeTs) && !isNaN(endTimeTs)){
+				if (startTimeTs > endTimeTs){
+					errors.push("Start time must come before end time.");
+				} else {
+					if (endTimeTs - startTimeTs > 1000*60*60*24*7){
+						errors.push("Time span cannot be longer than 1 week.");
+					}
+				}
+			}
+			
+			//add errors to <ul> list
+			var errorList = document.getElementById("errorList");
+			errorList.innerHTML = ""; //clear
+			for (var i = 0; i < errors.length; i++){
+				var error = errors[i];
+				var li = document.createElement("li");
+				li.appendChild(document.createTextNode(error));
+				errorList.appendChild(li);
+			}
+			
+			return errors.length == 0;
+		}
+		
+		var isCoord = function(){
+			var regex = /^-?\d+$/;
+			return function(value){
+				return regex.test(value);
+			};
+		}();
+		
+		var isTime = function(value){
+			return !isNaN(Date.parse(value));
+		};
+		
+		function checkCoord(textBox){
+			checkTextBox(textBox, isCoord);
+		}
+		
+		function checkTime(textBox){
+			checkTextBox(textBox, isTime);
+		}
+		
+		function checkTextBox(textBox, func){
+			var value = textBox.value.trim();
+			var className = "validText";
+			if (value != "" && !func(value)){
+				className = "invalidText"
+			}
+			textBox.className = className;
+		}
+		</script>
+		
 		<style>
 		body{
 			color:#fff;
@@ -43,6 +142,13 @@
 			color: #960;
 			text-decoration: none;
 		}
+		
+		.validText {
+			background-color: #fff;
+		}
+		.invalidText {
+			background-color: #f99;
+		}
 		</style>
 	</head>
 	<body>
@@ -64,16 +170,14 @@
 		<strong>Note:</strong> This tool cannot detect hidden players.
 		<hr />
 		
-		<form action="." method="get">
-			{% if errors|length > 0 %}
-				<div style="color:red">
-					<ul>
-						{% for error in errors %}
-							<li>{{ error }}</li>
-						{% endfor %}
-					</ul>
-				</div>
-			{% endif %}
+		<form action="." method="get" onsubmit="return validate(this);">
+			<div style="color:red">
+				<ul id="errorList">
+					{% for error in errors %}
+						<li>{{ error }}</li>
+					{% endfor %}
+				</ul>
+			</div>
 			
 			<em>{{ req() }} = required</em>
 			
@@ -102,18 +206,18 @@
 			</div>
 			
 			<div style="padding-top:10px">
-				Start time{{ req() }}: <input type="text" name="startTime" value="{{ startTime }}" /> <em>(format: YYYY-MM-DD HH:MM)</em>
+				Start time{{ req() }}: <input type="text" name="startTime" id="startTime" value="{{ startTime }}" onblur="checkTime(this)" /> <em>(format: YYYY-MM-DD HH:MM)</em>
 			</div>
 			<div>
-				End time{{ req() }}: <input type="text" name="endTime" value="{{ endTime }}" />  <em>(format: YYYY-MM-DD HH:MM)</em>
+				End time{{ req() }}: <input type="text" name="endTime" id="endTime" value="{{ endTime }}" onblur="checkTime(this)" />  <em>(format: YYYY-MM-DD HH:MM)</em>
 			</div>
 			<div style="padding-top:10px">
 				Upper-left coords:<br />
-				X: <input type="text" name="x1" size="10" value="{{ x1 }}" /> Z: <input type="text" name="z1" size="10" value="{{ z1 }}" />
+				X: <input type="text" name="x1" id="x1" size="10" value="{{ x1 }}" onblur="checkCoord(this)" /> Z: <input type="text" name="z1" id="z1" size="10" value="{{ z1 }}" onblur="checkCoord(this)" />
 			</div>
 			<div>
 				Bottom-right coords:<br />
-				X: <input type="text" name="x2" size="10" value="{{ x2 }}" /> Z: <input type="text" name="z2" size="10" value="{{ z2 }}" />
+				X: <input type="text" name="x2" id="x2" size="10" value="{{ x2 }}" onblur="checkCoord(this)" /> Z: <input type="text" name="z2" id="z2" size="10" value="{{ z2 }}" onblur="checkCoord(this)" />
 			</div>
 			<div style="padding-top:10px">
 				Player: <input type="text" name="player" value="{{ player }}" /> <em>(can be partial name)</em>
@@ -147,17 +251,17 @@
 					{% endfor %}
 				</table>
 			</div>
+			
+			<script>
+			var table = document.getElementById('resultsTable');
+			table.afterSort = function(){
+				for (var i = 1; i < table.rows.length; i++){
+					var row = table.rows[i];
+					row.className = (i % 2 == 0) ? 'evenRow' : 'oddRow';
+				}
+			};
+			</script>
 		{% endif %}
-
-		<script>
-		var table = document.getElementById('resultsTable');
-		table.afterSort = function(){
-			for (var i = 1; i < table.rows.length; i++){
-				var row = table.rows[i];
-				row.className = (i % 2 == 0) ? 'evenRow' : 'oddRow';
-			}
-		};
-		</script>
 
 		{{ hitCounter(enableHitCounter) }}
 	</body>
