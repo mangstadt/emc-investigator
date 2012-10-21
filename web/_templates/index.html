@@ -40,9 +40,11 @@
 			if (startTime == ""){
 				errors.push("Start time required.");
 			} else {
+				/*
 				if (isNaN(startTimeTs)){
 					errors.push("Invalid start time.");
 				}
+				*/
 			}
 			
 			var endTime = document.getElementById('endTime').value.trim();
@@ -50,11 +52,14 @@
 			if (endTime == ""){
 				errors.push("End time required.");
 			} else {
+				/*
 				if (isNaN(endTimeTs)){
 					errors.push("Invalid end time.");
 				}
+				*/
 			}
 
+			/*
 			if (!isNaN(startTimeTs) && !isNaN(endTimeTs)){
 				if (startTimeTs > endTimeTs){
 					errors.push("Start time must come before end time.");
@@ -64,6 +69,7 @@
 					}
 				}
 			}
+			*/
 			
 			//add errors to <ul> list
 			var errorList = document.getElementById("errorList");
@@ -86,7 +92,8 @@
 		}();
 		
 		var isTime = function(value){
-			return !isNaN(Date.parse(value));
+			//return !isNaN(Date.parse(value));
+			return true;
 		};
 		
 		function checkCoord(textBox){
