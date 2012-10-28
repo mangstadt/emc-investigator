@@ -345,7 +345,7 @@
 										<tr class="evenRow">
 									{% endif %}
 									<td>{{ result.ts|date('Y-m-d H:i') }}</td>
-									<td><img onerror="this.style.display='none'" src="http://smp1.empire.us:8880/tiles/faces/16x16/{{ player.name|url_encode() }}.png" /> {{ player.name }}</td>
+									<td><img onerror="this.style.display='none'" src="http://{{ selectedServer }}.empire.us:8880/tiles/faces/16x16/{{ player.name|url_encode() }}.png" /> {{ player.name }}</td>
 									<td>({{ player.x }}, {{ player.z }}) [{{ player.y }}]</td>
 									</tr>
 									{% set count = count + 1 %}
