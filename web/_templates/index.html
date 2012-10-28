@@ -245,42 +245,46 @@
 			<input type="submit" value="Search" />
 		</form>
 
-		{% if results|length > 0 %}
+		{% if results is not null %}
 			<h1>Results</h1>
-			<div>
-				<table cellpadding="5" class="sortable" id="resultsTable">
-					<tr>
-						<th style="cursor:pointer;" id="timeCol">Time (GMT-5)</th>
-						<th style="cursor:pointer;">Player</th>
-						<th class="sorttable_nosort">(X,Z) [Y]</th>
-					</tr>
-					{% set count = 0 %}
-					{% for result in results %}
-						{% for player in result.players %}
-							{% if count is odd %}
-								<tr class="oddRow">
-							{% else %}
-								<tr class="evenRow">
-							{% endif %}
-							<td>{{ result.ts|date('Y-m-d H:i') }}</td>
-							<td><img onerror="this.style.display='none'" src="http://smp1.empire.us:8880/tiles/faces/16x16/{{ player.name|url_encode() }}.png" />{{ player.name }}</td>
-							<td>({{ player.x }}, {{ player.z }}), [{{ player.y }}]</td>
-							</tr>
-							{% set count = count + 1 %}
+			{% if results|length == 0 %}
+				No results
+			{% else %}
+				<div>
+					<table cellpadding="5" class="sortable" id="resultsTable">
+						<tr>
+							<th style="cursor:pointer;" id="timeCol">Time (GMT-5)</th>
+							<th style="cursor:pointer;">Player</th>
+							<th class="sorttable_nosort">(X,Z) [Y]</th>
+						</tr>
+						{% set count = 0 %}
+						{% for result in results %}
+							{% for player in result.players %}
+								{% if count is odd %}
+									<tr class="oddRow">
+								{% else %}
+									<tr class="evenRow">
+								{% endif %}
+								<td>{{ result.ts|date('Y-m-d H:i') }}</td>
+								<td><img onerror="this.style.display='none'" src="http://smp1.empire.us:8880/tiles/faces/16x16/{{ player.name|url_encode() }}.png" />{{ player.name }}</td>
+								<td>({{ player.x }}, {{ player.z }}), [{{ player.y }}]</td>
+								</tr>
+								{% set count = count + 1 %}
+							{% endfor %}
 						{% endfor %}
-					{% endfor %}
-				</table>
-			</div>
-			
-			<script>
-			var table = document.getElementById('resultsTable');
-			table.afterSort = function(){
-				for (var i = 1; i < table.rows.length; i++){
-					var row = table.rows[i];
-					row.className = (i % 2 == 0) ? 'evenRow' : 'oddRow';
-				}
-			};
-			</script>
+					</table>
+				</div>
+				
+				<script>
+				var table = document.getElementById('resultsTable');
+				table.afterSort = function(){
+					for (var i = 1; i < table.rows.length; i++){
+						var row = table.rows[i];
+						row.className = (i % 2 == 0) ? 'evenRow' : 'oddRow';
+					}
+				};
+				</script>
+			{% endif %}
 		{% endif %}
 
 		{{ hitCounter(enableHitCounter) }}
