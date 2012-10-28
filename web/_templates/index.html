@@ -229,7 +229,10 @@
 			</div>
 			
 			<div style="padding-top:10px">
-				<strong>Date range:</strong> <em>(format: YYYY-MM-DD HH:MM, timezone: GMT{{ gmtOffsetHours }})</em><br />
+				<strong>Date range:</strong><br />
+				&nbsp;&nbsp;&nbsp;<em>format:</em> <code>YYYY-MM-DD HH:MM</code><br />
+				&nbsp;&nbsp;&nbsp;<em>timezone:</em> <code>GMT{{ gmtOffsetHours }}</code><br />
+				&nbsp;&nbsp;&nbsp;<em>data available from approx.</em> <code>{{ dataStartDate|date('Y-m-d') }}</code> <em>to present</em><br />
 				Start:{{ req() }} <input type="text" name="startTime" id="startTime" value="{{ startTime }}" onblur="checkTime(this)" /> End:{{ req() }} <input type="text" name="endTime" id="endTime" value="{{ endTime }}" onblur="checkTime(this)" />
 			</div>
 			<div style="padding-top:10px">

@@ -108,6 +108,9 @@ $tz = new DateTimeZone(date_default_timezone_get());
 $now = new DateTime();
 $gmtOffsetHours = $tz->getOffset($now) / 3600;
 
+//data collection start date
+$dataStartDate = strtotime('2012-10-16');
+
 echo $twig->render('index.html', array(
 	'enableHitCounter' => Env::$enableHitCounter,
 	'errors' => $errors,
@@ -123,7 +126,8 @@ echo $twig->render('index.html', array(
 	'z2' => @$z2,
 	'player' => @$player,
 	'results' => @$results,
-	'gmtOffsetHours' => $gmtOffsetHours
+	'gmtOffsetHours' => $gmtOffsetHours,
+	'dataStartDate' => $dataStartDate
 ));
 
 ?>
