@@ -273,16 +273,27 @@ class EmcMapApi {
 	 * Gets the update JSON object.
 	 * @param int $lastUpdated (optional) the timestamp in milliseconds of the last time update was called.
 	 * This is used to get the tiles that were updated since the last call
+	 * @param int $timeout (optional) the HTTP timeout in seconds
 	 * @return string the JSON object or false if there was an error getting it
 	 */
-	public function getUpdate($lastUpdated = null){
+	public function getUpdate($lastUpdated = null, $timeout = null){
 		if ($lastUpdated == null){
 			$lastUpdated = time() * 1000;
 		}
 		
 		$url = "http://{$this->server}.empire.us:8880/up/world/{$this->world}/$lastUpdated";
 		$this->log("getting $url...");
-		return file_get_contents($url);
+		
+		$ctx = null;
+		if ($timeout != null){
+			$ctx = stream_context_create(array(
+				'http' => array( 
+					'timeout' => $timeout
+				)
+			));
+		}
+		
+		return file_get_contents($url, false, $ctx);
 	}
 	
 	/**

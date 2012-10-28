@@ -12,8 +12,6 @@ spl_autoload_register(function ($class) {
 	}
 });
 
-$stderr = fopen("php://stderr", "w");
-
 //parse the command line arguments
 $args = new Args("o:n:s:w:t:ph", array("output:", "name:", "server:", "world:", "timestamp:", "db", "repeat:", "config:", "prettyPrint", "compress:", "stdout", "help"), array(null, "config"));
 
@@ -82,14 +80,14 @@ USAGE;
 //get server name
 $server = $args->value('s', 'server');
 if ($server == null){
-	fputs($stderr, "Error: \"--server\" parameter required.\n");
+	error_log("Error: \"--server\" parameter required.");
 	exit(1);
 }
 
 //get world name
 $world = $args->value('w', 'world');
 if ($world == null){
-	fputs($stderr, "Error: \"--world\" parameter required.\n");
+	error_log("Error: \"--world\" parameter required.");
 	exit(1);
 }
 
@@ -105,7 +103,7 @@ if ($outputDir == null){
 } else if (!is_dir($outputDir)) {
 	$success = mkdir($outputDir, 0744, true);
 	if (!$success){
-		fputs($stderr, "Error: Could not create directory \"$outputDir\".\n");
+		error_log("Error: Could not create directory \"$outputDir\".");
 		exit(1);
 	}
 }
@@ -135,7 +133,7 @@ $compress = $args->value(null, 'compress');
 if ($compress != null){
 	$compress = strtolower($compress);
 	if (!in_array($compress, array('zip', 'tar', 'tar.gz', 'tar.bz2'))){
-		fputs($stderr, "Error: Invalid value for \"--compress\".\n");
+		error_log("Error: Invalid value for \"--compress\".");
 		exit(1);
 	}
 }
@@ -143,12 +141,55 @@ if ($compress != null){
 //get stdout flag
 $stdout = $args->exists(null, 'stdout');
 
-//get DB info
+//create DB connection
 if ($args->exists(null, 'db')){
+	//get connection info
 	$dbHost = getenv('DB_HOST');
 	$dbDatabase = getenv('DB_NAME');
 	$dbUsername = getenv('DB_USER');
 	$dbPassword = getenv('DB_PASS');
+	
+	//create connection
+	$mysqli = new mysqli($dbHost, $dbUsername, $dbPassword, $dbDatabase);
+	//$mysqli = new mysqli('127.0.0.1', 'root', 'root', 'emc_investigator'); //Mac
+	if ($mysqli->connect_errno) {
+		throw new Exception('DB connection error (' . $mysqli->connect_errno . ') ' . $mysqli->connect_error);
+	}
+	
+	//get id for server
+	$sql = "SELECT id from servers WHERE name = '" . $mysqli->real_escape_string($server) . "'";
+	$result = $mysqli->query($sql);
+	if ($result === false){
+		error_log("Error: Problem running query: $sql");
+		exit(1);
+	} else if ($result->num_rows == 0){
+		error_log("Error: Server \"$server\" is not in the database (add a row to \"servers\" table).");
+		exit(1);
+	} else {
+		$rows = $result->fetch_array();
+		$serverId = $rows[0];
+	}
+	
+	//get id for world
+	$sql = "SELECT id from worlds WHERE name = '" . $mysqli->real_escape_string($world) . "'";
+	$result = $mysqli->query($sql);
+	if ($result === false){
+		error_log("Error: Problem running query: $sql");
+		exit(1);
+	} else if ($result->num_rows == 0){
+		error_log("Error: World \"$world\" is not in the database (add a row to \"worlds\" table).");
+		exit(1);
+	} else {
+		$rows = $result->fetch_array();
+		$worldId = $rows[0];
+	}
+	
+	//prepare SQL statement
+	$sql = "INSERT INTO readings (ts, json, server_id, world_id) VALUES (?, ?, $serverId, $worldId)";
+	$stmt = $mysqli->prepare($sql);
+	if ($stmt === false) {
+		throw new Exception("Problem preparing SQL statement: $sql");
+	}
 }
 
 //create API object
@@ -158,107 +199,78 @@ $api = new EmcMapApi($server, $world);
 for ($curRepeatCount = 0; $curRepeatCount < $repeatCount; $curRepeatCount++){
 	$nextRun = time() + $repeatInterval;
 
-	$jsonStr = $api->getUpdate($timestamp);
+	$jsonStr = $api->getUpdate($timestamp, 10);
 	if ($jsonStr === false || strlen($jsonStr) == 0){
-		fputs($stderr, "Error downloading player data.  EMC might be down or your Internet connection might be down.\n");
-		exit(1);
-	}
-
-	$jsonObj = json_decode($jsonStr);
-	if ($jsonObj === false){
-		fputs($stderr, "Error parsing JSON data.  EMC might be down or your Internet connection might be down.\n");
-		exit(1);
-	}
-
-	unset($jsonObj->updates); //remove "updates" field (we don't care about tile updates)
-	$jsonStr = json_encode($jsonObj);
-	if ($prettyPrint){
-		$jsonStr = prettyPrintJson($jsonStr);
-	}
-
-	//print to file
-	if ($outputDir != null){
-		//generate the file name
-		$jsonFileName = preg_replace_callback("~\\{(.*?)\\}~", function($matches){ return date($matches[1]); }, $fileName);
-
-		//save JSON to disk
-		if ($compress != null){
-			$archiveFile = $outputDir . '/updates-' . date('Ymd') . '.' . $compress;
-
-			if (strpos($compress, "tar") === 0){
-				//see: http://pear.php.net/package/Archive_Tar
-				require_once 'Archive/Tar.php';
-				
-				$dotPos = strpos($compress, '.');
-				$tarType = null;
-				if ($dotPos !== false){
-					$tarType = substr($compress, $dotPos+1);
-				}
-				$tar = new Archive_Tar($archiveFile, $tarType);
-				$tar->addString($jsonFileName, $jsonStr);
-			} else if ($compress == 'zip'){
-				$zip = new ZipArchive();
-				if (file_exists($archiveFile)){
-					$zip->open($archiveFile);
-				} else {
-					$zip->open($archiveFile, ZipArchive::CREATE);
-				}
-				$zip->addFromString($jsonFileName, $jsonStr);
-				$zip->close();
-			} else {
-				fputs($stderr, "Unknown compression type: $compress\n");
-				exit(1);
+		error_log("Error downloading player data for $server.  EMC might be down or your Internet connection might be down.");
+	} else {
+		$jsonObj = json_decode($jsonStr);
+		if ($jsonObj === false || !isset($jsonObj->timestamp)){
+			error_log("Error parsing JSON data for $server.  EMC might be down or your Internet connection might be down.");
+		} else {
+			//remove "updates" field (we don't care about tile updates)
+			unset($jsonObj->updates);
+			
+			//get timestamp
+			$ts = $jsonObj->timestamp / 1000;
+			
+			//marshal to string
+			$jsonStr = json_encode($jsonObj);
+			if ($prettyPrint){
+				$jsonStr = prettyPrintJson($jsonStr);
 			}
-		} else {
-			file_put_contents("$outputDir/$jsonFileName", $jsonStr);
+		
+			//print to file
+			if ($outputDir != null){
+				//generate the file name
+				$jsonFileName = preg_replace_callback("~\\{(.*?)\\}~", function($matches){ return date($matches[1]); }, $fileName);
+		
+				//save JSON to disk
+				if ($compress != null){
+					$archiveFile = $outputDir . '/updates-' . date('Ymd') . '.' . $compress;
+		
+					if (strpos($compress, "tar") === 0){
+						//see: http://pear.php.net/package/Archive_Tar
+						require_once 'Archive/Tar.php';
+						
+						$dotPos = strpos($compress, '.');
+						$tarType = null;
+						if ($dotPos !== false){
+							$tarType = substr($compress, $dotPos+1);
+						}
+						$tar = new Archive_Tar($archiveFile, $tarType);
+						$tar->addString($jsonFileName, $jsonStr);
+					} else if ($compress == 'zip'){
+						$zip = new ZipArchive();
+						if (file_exists($archiveFile)){
+							$zip->open($archiveFile);
+						} else {
+							$zip->open($archiveFile, ZipArchive::CREATE);
+						}
+						$zip->addFromString($jsonFileName, $jsonStr);
+						$zip->close();
+					} else {
+						error_log("Unknown compression type: $compress");
+						exit(1);
+					}
+				} else {
+					file_put_contents("$outputDir/$jsonFileName", $jsonStr);
+				}
+			}
+		
+			//save to DB
+			if (isset($mysqli)){
+				$tsStr = date('Y-m-d H:i:s', $ts);
+				$stmt->bind_param('ss', $tsStr, $jsonStr);
+				if (!$stmt->execute()){
+					throw new Exception("Problem inserting data into DB: " . $stmt->error);
+				}
+			}
+		
+			//print to stdout
+			if ($stdout){
+				echo $jsonStr, "\n";
+			}
 		}
-	}
-
-	//save to DB
-	if (isset($dbHost)){
-		$mysqli = new mysqli($dbHost, $dbUsername, $dbPassword, $dbDatabase);
-		//$mysqli = new mysqli('localhost', 'root', 'root', 'emc_investigator', 3306, '/tmp/mysql.sock'); //Mac
-		if ($mysqli->connect_errno) {
-			throw new Exception('Connect Error (' . $mysqli->connect_errno . ') ' . $mysqli->connect_error);
-		}
-
-		//get id for server
-		$sql = "SELECT id from servers WHERE name = '" . $mysqli->real_escape_string($server) . "'";
-		$result = $mysqli->query($sql);
-		if ($result === false){
-			fputs($stderr, "Error: Problem running query: $sql\n");
-			exit(1);
-		} else if ($result->num_rows == 0){
-			fputs($stderr, "Error: Server \"$server\" is not in the database (add a row to \"servers\" table).\n");
-			exit(1);
-		} else {
-			$rows = $result->fetch_array();
-			$serverId = $rows[0];
-		}
-
-		//get id for world
-		$sql = "SELECT id from worlds WHERE name = '" . $mysqli->real_escape_string($world) . "'";
-		$result = $mysqli->query($sql);
-		if ($result === false){
-			fputs($stderr, "Error: Problem running query: $sql\n");
-			exit(1);
-		} else if ($result->num_rows == 0){
-			fputs($stderr, "Error: World \"$world\" is not in the database (add a row to \"worlds\" table).\n");
-			exit(1);
-		} else {
-			$rows = $result->fetch_array();
-			$worldId = $rows[0];
-		}
-	
-		$stmt = $mysqli->prepare("INSERT INTO readings (ts, json, server_id, world_id) VALUES (?, ?, ?, ?)");
-		$ts = date('Y-m-d H:i:s');
-		$stmt->bind_param('ssii', $ts, $jsonStr, $serverId, $worldId);
-		$stmt->execute();
-	}
-
-	//print to stdout
-	if ($stdout){
-		echo $jsonStr, "\n";
 	}
 
 	//sleep before the next run
