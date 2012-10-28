@@ -32,10 +32,10 @@ class DbDao {
 	 * @param string $world the world to search over ("wilderness", "wilderness_nether", or "town")
 	 * @param int $startTime the start timestamp
 	 * @param int $endTime the end timestamp
-	 * @param int $x1 (optional) the x-coord of the upper-left corner
-	 * @param int $z1 (optional) the z-coord of the upper-left corner
-	 * @param int $x2 (optional) the x-coord of the bottom-right corner
-	 * @param int $z2 (optional) the z-coord of the bottom-right corner
+	 * @param int $x1 (optional) the x-coord of one of the corners of the bounded area
+	 * @param int $z1 (optional) the z-coord of one of the corners of the bounded area
+	 * @param int $x2 (optional) the x-coord of the opposite corner of the bounded area
+	 * @param int $z2 (optional) the z-coord of the opposite corner of the bounded area
 	 * @param string $searchPlayer (optional) the player to search for
 	 * @return array(ReadingResult) the results
 	 * @throws Exception if there's a database problem or a problem parsing the JSON
