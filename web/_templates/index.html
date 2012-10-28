@@ -260,18 +260,32 @@
 						</tr>
 						{% set count = 0 %}
 						{% for result in results %}
-							{% for player in result.players %}
-								{% if count is odd %}
-									<tr class="oddRow">
-								{% else %}
-									<tr class="evenRow">
-								{% endif %}
-								<td>{{ result.ts|date('Y-m-d H:i') }}</td>
-								<td><img onerror="this.style.display='none'" src="http://smp1.empire.us:8880/tiles/faces/16x16/{{ player.name|url_encode() }}.png" /> {{ player.name }}</td>
-								<td>({{ player.x }}, {{ player.z }}) [{{ player.y }}]</td>
+							{% if result.missingDataStart is not null %}
+								<tr style="background-color: #300">
+									<td style="text-align:center">
+										{{ result.missingDataStart|date('Y-m-d H:i') }}<br />
+										<em>to</em><br />
+										{{ result.missingDataEnd|date('Y-m-d H:i') }}
+									</td>
+									<td style="text-align:center" colspan="2">
+										<em>No data</em>
+									</td>
 								</tr>
 								{% set count = count + 1 %}
-							{% endfor %}
+							{% else %}
+								{% for player in result.players %}
+									{% if count is odd %}
+										<tr class="oddRow">
+									{% else %}
+										<tr class="evenRow">
+									{% endif %}
+									<td>{{ result.ts|date('Y-m-d H:i') }}</td>
+									<td><img onerror="this.style.display='none'" src="http://smp1.empire.us:8880/tiles/faces/16x16/{{ player.name|url_encode() }}.png" /> {{ player.name }}</td>
+									<td>({{ player.x }}, {{ player.z }}) [{{ player.y }}]</td>
+									</tr>
+									{% set count = count + 1 %}
+								{% endfor %}
+							{% endif %}
 						{% endfor %}
 					</table>
 				</div>

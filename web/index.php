@@ -95,7 +95,7 @@ if (count($_GET) > 0){
 
 	if (count($errors) == 0){
 		$dao = new DbDao(Env::$dbHost, Env::$dbName, Env::$dbUser, Env::$dbPass, Env::$dbPort);
-		$results = $dao->getReadings($server, $world, $startTimeTs, $endTimeTs, $x1, $z1, $x2, $z2, $player);
+		$results = $dao->getReadings($server, $world, $startTimeTs, $endTimeTs, 180, $x1, $z1, $x2, $z2, $player);
 	}
 } else {
 	//set default form values

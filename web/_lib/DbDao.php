@@ -32,6 +32,7 @@ class DbDao {
 	 * @param string $world the world to search over ("wilderness", "wilderness_nether", or "town")
 	 * @param int $startTime the start timestamp
 	 * @param int $endTime the end timestamp
+	 * @param int $gapInterval if a gap in the server data of this length (in seconds) is found, then a "gap" result will be returned in the results to show that no data exists for this time span
 	 * @param int $x1 (optional) the x-coord of one of the corners of the bounded area
 	 * @param int $z1 (optional) the z-coord of one of the corners of the bounded area
 	 * @param int $x2 (optional) the x-coord of the opposite corner of the bounded area
@@ -40,7 +41,7 @@ class DbDao {
 	 * @return array(ReadingResult) the results
 	 * @throws Exception if there's a database problem or a problem parsing the JSON
 	 */
-	public function getReadings($server, $world, $startTime, $endTime, $x1 = null, $z1 = null, $x2 = null, $z2 = null, $searchPlayer = null){
+	public function getReadings($server, $world, $startTime, $endTime, $gapInterval = 180, $x1 = null, $z1 = null, $x2 = null, $z2 = null, $searchPlayer = null){
 		$world = strtolower($world);
 		
 		//get server ID
@@ -71,11 +72,23 @@ class DbDao {
 		}
 		
 		$readingResults = array();
+		$prevTs = $startTime;
 		while ($row = $uresult->fetch_assoc()) {
 			$json = json_decode($row['json']);
 			if ($json === false){
 				throw new Exception("Problem parsing JSON: $json");
 			} else {
+				$ts = strtotime($row['ts']);
+				
+				//check for a data gap
+				$diff = $ts - $prevTs;
+				if ($diff > $gapInterval){
+					if ($prevTs != $startTime){
+						$prevTs += 60;
+					}
+					$readingResults[] = ReadingResult::gap($prevTs, $ts - 60);
+				}
+				
 				if (isset($json->players)){
 					$players = array();
 					foreach ($json->players as $player){
@@ -107,10 +120,19 @@ class DbDao {
 						}
 					}
 					if ($players){
-						$readingResults[] = new ReadingResult(strtotime($row['ts']), $players);
+						$readingResults[] = ReadingResult::reading($ts, $players);
 					}
 				}
-			}	
+			}
+			$prevTs = $ts;
+		}
+		
+		$diff = $endTime - $prevTs;
+		if ($diff > $gapInterval){
+			if ($prevTs != $startTime){
+				$prevTs += 60;
+			}
+			$readingResults[] = ReadingResult::gap($prevTs, $endTime);
 		}
 		
 		return $readingResults;
