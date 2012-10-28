@@ -103,6 +103,11 @@ if (count($_GET) > 0){
 	$world = 'wilderness';
 }
 
+//get GMT offset
+$tz = new DateTimeZone(date_default_timezone_get());
+$now = new DateTime();
+$gmtOffsetHours = $tz->getOffset($now) / 3600;
+
 echo $twig->render('index.html', array(
 	'enableHitCounter' => Env::$enableHitCounter,
 	'errors' => $errors,
@@ -118,6 +123,7 @@ echo $twig->render('index.html', array(
 	'z2' => @$z2,
 	'player' => @$player,
 	'results' => @$results,
+	'gmtOffsetHours' => $gmtOffsetHours
 ));
 
 ?>
