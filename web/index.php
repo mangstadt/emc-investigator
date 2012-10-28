@@ -45,7 +45,12 @@ if (count($_GET) > 0){
 	$z1 = @$_GET['z1'];
 	$x2 = @$_GET['x2'];
 	$z2 = @$_GET['z2'];
-	$player = @$_GET['player'];
+	$players = @$_GET['players'];
+	if ($players == null){
+		$playersArray = array();
+	} else{
+		$playersArray = preg_split("/\\s*,\\s*/", $players);
+	}
 	$minimap = @$_GET['minimap'] != null;
 	
 	if ($server == null){
@@ -96,7 +101,7 @@ if (count($_GET) > 0){
 
 	if (count($errors) == 0){
 		$dao = new DbDao(Env::$dbHost, Env::$dbName, Env::$dbUser, Env::$dbPass, Env::$dbPort);
-		$results = $dao->getReadings($server, $world, $startTimeTs, $endTimeTs, 180, $x1, $z1, $x2, $z2, $player);
+		$results = $dao->getReadings($server, $world, $startTimeTs, $endTimeTs, 180, $x1, $z1, $x2, $z2, $playersArray);
 		
 		//generate minimap data
 		if ($minimap){
@@ -161,7 +166,7 @@ echo $twig->render('index.html', array(
 	'x2' => @$x2,
 	'z1' => @$z1,
 	'z2' => @$z2,
-	'player' => @$player,
+	'players' => @$players,
 	'minimap' => @$minimap,
 	'results' => @$results,
 	'minimapData' => @$minimapData,
