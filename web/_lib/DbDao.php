@@ -45,7 +45,7 @@ class DbDao {
 		
 		//get server ID
 		$serverId = $this->getServerId($server);
-		if ($serverId == null){
+		if ($serverId === null){
 			throw new Exception("Invalid server: $server");
 		}
 
