@@ -5,6 +5,8 @@
 	<head>
 		<title>EMC Investigator</title>
 		
+		<link rel="icon" type="image/png" href="images/favicon.png" />
+		
 		<!-- http://www.kryogenix.org/code/browser/sorttable/ -->
 		<script type="text/javascript" src="_js/sorttable.js"></script>
 		
@@ -128,6 +130,31 @@
 			}
 			textBox.className = className;
 		}
+		
+		function toggleVisibility(id){
+			var element = document.getElementById(id);
+			if (element == null){
+				return;
+			}
+			
+			var icon = document.getElementById(id + "-icon");
+			if (element.style.display == "none"){
+				element.style.display = "block";
+				if (icon != null){
+					icon.src = "images/collapse.gif";
+				}
+			} else {
+				element.style.display = "none";
+				if (icon != null){
+					icon.src = "images/expand.gif";
+				}
+			}
+		}
+		
+		function selectAll(textarea){
+			textarea.focus();
+			textarea.select();
+		}
 		</script>
 		
 		<style>
@@ -138,6 +165,10 @@
 		
 		table{
 			color:#fff;
+		}
+		
+		img{
+			border:0px;
 		}
 		
 		tr.evenRow{
@@ -241,8 +272,12 @@
 				X2: <input type="text" name="x2" id="x2" size="10" value="{{ x2 }}" onblur="checkCoord(this)" /> Z2: <input type="text" name="z2" id="z2" size="10" value="{{ z2 }}" onblur="checkCoord(this)" />
 			</div>
 			<div style="padding-top:10px">
-				<strong>Player:</strong> <input type="text" name="player" value="{{ player }}" /> <em>(can be a part of the name)</em>
+				<strong>Players:</strong> <input type="text" name="players" value="{{ players }}" /> <em>(comma separated, can be partial names)</em>
 			</div>
+			<div style="padding-top:10px">
+				<input type="checkbox" id="minimap" name="minimap" {% if (minimap) %}checked="checked"{% endif %} /> <label for="minimap">generate waypoints for Rei's Minimap</label>
+			</div>
+			
 			<input type="submit" value="Search" />
 		</form>
 
@@ -251,6 +286,38 @@
 			{% if results|length == 0 %}
 				No results
 			{% else %}
+				{% if minimapData is not null %}
+					<div style="width:600px; background-color:#333">
+						<div>
+							<a href="#" onclick="toggleVisibility('minimapData'); return false;"><img id="minimapData-icon" src="images/collapse.gif" /> Rei's Minimap</a>
+						</div>
+						<div id="minimapData" style="padding-left:20px">
+							<div>
+								<a href="#" onclick="toggleVisibility('minimapData-instructions'); return false;"><img id="minimapData-instructions-icon" src="images/expand.gif" /> Instructions</a>
+								<div id="minimapData-instructions" style="display:none">
+									<ol>
+										<li>Download and install <a href="http://www.minecraftforum.net/topic/482147-142132125-oct25-reis-minimap-v32-05/" target="_blank">Rei's Minimap</a>.</li>
+										<li>
+											Open your Minecraft installation directory.
+											<ul>
+												<li>Windows: Go to "<code>Start &gt; Run</code>", type "<code>%appdata%</code>", and open the "<code>minecraft</code>" folder.</li>
+												<li>Mac: <code>/Users/yourusername/Library/Application Support/minecraft</code></li>
+												<li>Linux: <code>/home/yourusername/.minecraft</code></li>
+											</ul>
+										</li>
+										<li>Open the "<code>mods</code>" folder, then the "<code>rei_minimap</code>" folder.</li>
+										<li>Create a file and name it "<code>{{ minimapFilename }}</code>".</li>
+										<li>Copy and paste the text below into the file and save it.</li>
+									</ol>
+								</div>
+							</div>
+							<div>
+								Filename: <code>{{ minimapFilename }}</code><br />
+								<textarea onclick="selectAll(this)" style="width:95%; height:200px;">{{ minimapData }}</textarea>
+							</div>
+						</div>
+					</div>
+				{% endif %}
 				<div>
 					<table cellpadding="5" class="sortable" id="resultsTable">
 						<tr>
@@ -260,18 +327,32 @@
 						</tr>
 						{% set count = 0 %}
 						{% for result in results %}
-							{% for player in result.players %}
-								{% if count is odd %}
-									<tr class="oddRow">
-								{% else %}
-									<tr class="evenRow">
-								{% endif %}
-								<td>{{ result.ts|date('Y-m-d H:i') }}</td>
-								<td><img onerror="this.style.display='none'" src="http://smp1.empire.us:8880/tiles/faces/16x16/{{ player.name|url_encode() }}.png" /> {{ player.name }}</td>
-								<td>({{ player.x }}, {{ player.z }}) [{{ player.y }}]</td>
+							{% if result.missingDataStart is not null %}
+								<tr style="background-color: #300">
+									<td style="text-align:center">
+										{{ result.missingDataStart|date('Y-m-d H:i') }}<br />
+										<em>to</em><br />
+										{{ result.missingDataEnd|date('Y-m-d H:i') }}
+									</td>
+									<td style="text-align:center" colspan="2">
+										<em>No data</em>
+									</td>
 								</tr>
 								{% set count = count + 1 %}
-							{% endfor %}
+							{% else %}
+								{% for player in result.players %}
+									{% if count is odd %}
+										<tr class="oddRow">
+									{% else %}
+										<tr class="evenRow">
+									{% endif %}
+									<td>{{ result.ts|date('Y-m-d H:i') }}</td>
+									<td><img onerror="this.style.display='none'" src="http://{{ selectedServer }}.empire.us:8880/tiles/faces/16x16/{{ player.name|url_encode() }}.png" /> {{ player.name }}</td>
+									<td>({{ player.x }}, {{ player.z }}) [{{ player.y }}]</td>
+									</tr>
+									{% set count = count + 1 %}
+								{% endfor %}
+							{% endif %}
 						{% endfor %}
 					</table>
 				</div>

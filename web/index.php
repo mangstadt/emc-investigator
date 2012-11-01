@@ -45,7 +45,13 @@ if (count($_GET) > 0){
 	$z1 = @$_GET['z1'];
 	$x2 = @$_GET['x2'];
 	$z2 = @$_GET['z2'];
-	$player = @$_GET['player'];
+	$players = @$_GET['players'];
+	if ($players == null){
+		$playersArray = array();
+	} else{
+		$playersArray = preg_split("/\\s*,\\s*/", $players);
+	}
+	$minimap = @$_GET['minimap'] != null;
 	
 	if ($server == null){
 		$errors[] = 'Please select a server.';
@@ -95,12 +101,48 @@ if (count($_GET) > 0){
 
 	if (count($errors) == 0){
 		$dao = new DbDao(Env::$dbHost, Env::$dbName, Env::$dbUser, Env::$dbPass, Env::$dbPort);
-		$results = $dao->getReadings($server, $world, $startTimeTs, $endTimeTs, $x1, $z1, $x2, $z2, $player);
+		$results = $dao->getReadings($server, $world, $startTimeTs, $endTimeTs, 180, $x1, $z1, $x2, $z2, $playersArray);
+		
+		//generate minimap data
+		if ($minimap){
+			$colors = array("FF0000", "00FF00", "0000FF", "00FFFF", "FF00FF", "FFFF00", "FFFFFF", "000000");
+			$curColor = 0;
+			$playerColors = array();
+			$generator = new ReisMinimapGenerator();
+			foreach ($results as $result){
+				if ($result->players != null){
+					foreach ($result->players as $p){
+						//get the waypoint color
+						$color = @$playerColors[$p->name];
+						if ($color == null){
+							$color = $colors[$curColor++];
+							$playerColors[$p->name] = $color;
+							if ($curColor >= count($colors)){
+								$curColor = 0;
+							}
+						}
+						
+						//add the waypoint
+						$name = $p->name . " (" . date('Y-m-d H;i;s', $result->ts) . ")"; //note: colon chars cannot be used
+						$generator->addWaypoint($name, $p->x, $p->y, $p->z, true, $color);
+					}
+				}
+			}
+			$minimapData = $generator->__toString();
+			
+			$minimapWorldIds = array(
+				'wilderness_nether' => -1,
+				'wilderness' => 0,
+				'town' => 1,
+			);
+			$minimapFilename = ReisMinimapGenerator::buildFilename("$server.empire.us", $minimapWorldIds[$world]);
+		}
 	}
 } else {
 	//set default form values
 	$server = 'smp7';
 	$world = 'wilderness';
+	$minimap = false;
 }
 
 //get GMT offset
@@ -124,8 +166,11 @@ echo $twig->render('index.html', array(
 	'x2' => @$x2,
 	'z1' => @$z1,
 	'z2' => @$z2,
-	'player' => @$player,
+	'players' => @$players,
+	'minimap' => @$minimap,
 	'results' => @$results,
+	'minimapData' => @$minimapData,
+	'minimapFilename' => @$minimapFilename,
 	'gmtOffsetHours' => $gmtOffsetHours,
 	'dataStartDate' => $dataStartDate
 ));
