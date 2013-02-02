@@ -170,22 +170,8 @@ if ($args->exists(null, 'db')){
 		$serverId = $rows[0];
 	}
 	
-	//get id for world
-	$sql = "SELECT id from worlds WHERE name = '" . $mysqli->real_escape_string($world) . "'";
-	$result = $mysqli->query($sql);
-	if ($result === false){
-		error_log("Error: Problem running query: $sql");
-		exit(1);
-	} else if ($result->num_rows == 0){
-		error_log("Error: World \"$world\" is not in the database (add a row to \"worlds\" table).");
-		exit(1);
-	} else {
-		$rows = $result->fetch_array();
-		$worldId = $rows[0];
-	}
-	
 	//prepare SQL statement
-	$sql = "INSERT INTO readings (ts, json, server_id, world_id) VALUES (?, ?, $serverId, $worldId)";
+	$sql = "INSERT INTO readings (ts, json, server_id) VALUES (?, ?, $serverId)";
 	$stmt = $mysqli->prepare($sql);
 	if ($stmt === false) {
 		throw new Exception("Problem preparing SQL statement: $sql");

@@ -38,19 +38,9 @@ if ($result->num_rows == 0){
 	$serverId = $rows[0];
 }
 
-//get id for wilderness world
-$result = $mysqli->query("SELECT id FROM worlds WHERE name = 'wilderness'");
-if ($result->num_rows == 0){
-	$mysqli->query("INSERT INTO worlds (name) VALUES ('wilderness')");
-	$worldId = $mysqli->insert_id;
-} else {
-	$rows = $result->fetch_array();
-	$worldId = $rows[0];
-}
-
 $mysqli->autocommit(false);
 
-$stmt = $mysqli->prepare("INSERT INTO readings (ts, json, server_id, world_id) VALUES (?, ?, $serverId, $worldId)");
+$stmt = $mysqli->prepare("INSERT INTO readings (ts, json, server_id) VALUES (?, ?, $serverId)");
 
 //get list of all TAR files
 $dirStack = array($tarDir);
