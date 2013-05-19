@@ -8,7 +8,7 @@ spl_autoload_register(function ($class) {
 	}
 });
 
-// Set up Twig
+//setup Twig
 require_once __DIR__ . '/_lib/Twig/Autoloader.php';
 Twig_Autoloader::register();
 $loader = new Twig_Loader_Filesystem(__DIR__ . '/_templates');
@@ -17,12 +17,20 @@ $twig = new Twig_Environment($loader, array(
 	'auto_reload' => Env::$twigAutoReload,
 ));
 
+//define the list of servers
 $servers = array('smp1', 'smp2', 'smp3', 'smp4', 'smp5', 'smp6', 'smp7', 'smp8', 'smp9', 'utopia');
+$defaultServer = $servers[6];
+
+//define the list of worlds
 $worlds = array(
-	'wilderness'=>'wild',
-	'wilderness_nether'=>'nether',
-	'town'=>'town'
+	new World('wilderness', 'frontier (wild)', 0),
+	new World('wilderness_nether', 'frontier (nether)', -1),
+	new World('town', 'town', 0),
+	new World('wastelands', 'wastelands (wild)', 0),
+	new World('wastelands_nether', 'wastelands (nether)', -1)
 );
+$defaultWorld = $worlds[0];
+$worlds = indexWorlds($worlds);
 
 $errors = array();
 if (count($_GET) > 0){
@@ -38,7 +46,7 @@ if (count($_GET) > 0){
 	}
 	
 	$server = @$_GET['server'];
-	$world = @$_GET['world'];
+	$world = @$worlds[@$_GET['world']];
 	$startTime = @$_GET['startTime'];
 	$endTime = @$_GET['endTime'];
 	$x1 = @$_GET['x1'];
@@ -60,8 +68,6 @@ if (count($_GET) > 0){
 	}
 
 	if ($world == null){
-		$errors[] = 'Please select a world.';
-	} else if (!isset($worlds[$world])){
 		$errors[] = 'Invalid world selected.';
 	}
 	
@@ -101,7 +107,7 @@ if (count($_GET) > 0){
 
 	if (count($errors) == 0){
 		$dao = new DbDao(Env::$dbHost, Env::$dbName, Env::$dbUser, Env::$dbPass, Env::$dbPort);
-		$results = $dao->getReadings($server, $world, $startTimeTs, $endTimeTs, 180, $x1, $z1, $x2, $z2, $playersArray);
+		$results = $dao->getReadings($server, $world->value, $startTimeTs, $endTimeTs, 180, $x1, $z1, $x2, $z2, $playersArray);
 		
 		//generate minimap data
 		if ($minimap){
@@ -129,19 +135,13 @@ if (count($_GET) > 0){
 				}
 			}
 			$minimapData = $generator->__toString();
-			
-			$minimapWorldIds = array(
-				'wilderness_nether' => -1,
-				'wilderness' => 0,
-				'town' => 1,
-			);
-			$minimapFilename = ReisMinimapGenerator::buildFilename("$server.empire.us", $minimapWorldIds[$world]);
+			$minimapFilename = ReisMinimapGenerator::buildFilename("$server.empire.us", $world->minimapWorldId);
 		}
 	}
 } else {
 	//set default form values
-	$server = 'smp7';
-	$world = 'wilderness';
+	$server = $defaultServer;
+	$world = $defaultWorld;
 	$minimap = false;
 }
 
@@ -174,5 +174,24 @@ echo $twig->render('index.html', array(
 	'gmtOffsetHours' => $gmtOffsetHours,
 	'dataStartDate' => $dataStartDate
 ));
+
+function indexWorlds($worlds){
+	$map = array();
+	foreach ($worlds as $world){
+		$map[$world->value] = $world;
+	}
+	return $map;
+}
+
+class World{
+	public $value;
+	public $displayText;
+	public $minimapWorldId;
+	public function __construct($value, $displayText, $minimapWorldId){
+		$this->value = $value;
+		$this->displayText = $displayText;
+		$this->minimapWorldId = $minimapWorldId;
+	}
+}
 
 ?>

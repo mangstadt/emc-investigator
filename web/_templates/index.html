@@ -265,11 +265,11 @@
 				
 				<strong>World:</strong>{{ req() }}
 				<select name="world">
-					{% for value,display in worlds %}
-						{% if value == selectedWorld %}
-							<option value="{{ value }}" selected>{{ display }}</option>
+					{% for world in worlds %}
+						{% if world.value == selectedWorld.value %}
+							<option value="{{ world.value }}" selected>{{ world.displayText }}</option>
 						{% else %}
-							<option value="{{ value }}">{{ display }}</option>
+							<option value="{{ world.value }}">{{ world.displayText }}</option>
 						{% endif %}
 					{% endfor %}
 				</select>
