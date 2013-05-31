@@ -227,6 +227,18 @@
 			background-color: #f99;
 		}
 		
+		.note{
+			background-color: #666;
+			padding: 5px;
+			margin-top: 10px;
+		}
+		
+		.copyright{
+			font-size: 0.8em;
+			font-style: italic;
+			padding-top: 20px;
+		}
+		
 		.ui-datepicker{
 			font-size: 0.8em;
 		}
@@ -264,8 +276,8 @@
 			</tr>
 		</table>
 		
-		<br />
-		<strong>Note:</strong> This tool cannot detect hidden players.
+		<div class="note"><strong>Note:</strong> If you have been griefed or have witnessed a griefing, <strong><em>contact a <a href="http://empireminecraft.com/XenStaff" target="_blank">moderator</a> immediately!</em></strong></div>
+		<div class="note"><strong>Note:</strong> This tool cannot detect hidden players.</div>
 		<hr />
 		
 		<form action="." method="get" onsubmit="var valid = validate(this); if (valid) showLoading(); return valid;">
@@ -421,6 +433,7 @@
 				</script>
 			{% endif %}
 		{% endif %}
+		<div class="copyright">Copyright (c) 2013 Michael Angstadt</div>
 
 		{{ hitCounter(enableHitCounter) }}
 	</body>
