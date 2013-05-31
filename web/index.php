@@ -76,12 +76,31 @@ if (count($_GET) > 0){
 	} else {
 		$startTimeTs = strtotime($startTime);
 		$endTimeTs = strtotime($endTime);
+
 		if ($startTimeTs === false || $endTimeTs === false){
 			$errors[] = 'Invalid start/end times.';
-		} else if ($startTimeTs > $endTimeTs) {
-			$errors[] = 'Start time must come before end time.';
-		} else if ($endTimeTs - $startTimeTs > 60*60*24*7) {
-			$errors[] = 'Time span cannot be longer than 1 week.';
+		} else {
+			//truncate time component from start date string if it's midnight
+			$hour = date('H', $startTimeTs);
+			$minute = date('i', $startTimeTs);
+			if ($hour == 0 && $minute == 0){
+				$startTime = date('Y-m-d', $startTimeTs);
+			}
+			
+			//truncate time component from end date string if it's midnight
+			//also, include the entirety of the end date inside of the date range because this (most likely) means that the user didn't select a time
+			$hour = date('H', $endTimeTs);
+			$minute = date('i', $endTimeTs);
+			if ($hour == 0 && $minute == 0){
+				$endTime = date('Y-m-d', $endTimeTs);
+				$endTimeTs += 60 * 60 * 24; //increment by 1 day
+			}
+			
+			if ($startTimeTs > $endTimeTs) {
+				$errors[] = 'Start time must come before end time.';
+			} else if ($endTimeTs - $startTimeTs > 60*60*24*7) {
+				$errors[] = 'Time span cannot be longer than 1 week.';
+			}
 		}
 	}
 
