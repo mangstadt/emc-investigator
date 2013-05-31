@@ -6,11 +6,35 @@
 		<title>EMC Investigator</title>
 		
 		<link rel="icon" type="image/png" href="images/favicon.png" />
+
+		<!-- jQuery -->
+		<script type="text/javascript" src="_js/jquery/jquery.min.js"></script>
+		<link rel="stylesheet" media="all" type="text/css" href="_js/jquery-ui/jquery-ui.min.css" />
+		<script type="text/javascript" src="_js/jquery-ui/jquery-ui.min.js"></script>
+
+		<!--
+		Timepicker widget
+		http://trentrichardson.com/examples/timepicker/
+		-->
+		<link rel="stylesheet" media="all" type="text/css" href="_js/jquery-ui/jquery-ui-timepicker-addon.css" />
+		<script type="text/javascript" src="_js/jquery-ui/jquery-ui-timepicker-addon.js"></script>
 		
 		<!-- http://www.kryogenix.org/code/browser/sorttable/ -->
 		<script type="text/javascript" src="_js/sorttable.js"></script>
-		
+
 		<script>
+		$(document).ready(function() {
+			var options = {
+				dateFormat: 'yy-mm-dd',
+				hourGrid: 4,
+				minuteGrid: 10,
+				stepMinute: 10
+			};
+			
+			$('#startTime').datetimepicker(options);
+			$('#endTime').datetimepicker(options);
+		});
+
 		function validate(form){
 			var errors = [];
 			
@@ -202,6 +226,10 @@
 		.invalidText {
 			background-color: #f99;
 		}
+		
+		.ui-datepicker{
+			font-size: 0.8em;
+		}
 		</style>
 	</head>
 	<body>
@@ -277,10 +305,10 @@
 			
 			<div style="padding-top:10px">
 				<strong>Date range:</strong><br />
-				&nbsp;&nbsp;&nbsp;<em>format:</em> <code>YYYY-MM-DD HH:MM</code><br />
 				&nbsp;&nbsp;&nbsp;<em>timezone:</em> <code>GMT{{ gmtOffsetHours }}</code><br />
 				&nbsp;&nbsp;&nbsp;<em>data available from approx.</em> <code>{{ dataStartDate|date('Y-m-d') }}</code> <em>to present</em><br />
-				Start:{{ req() }} <input type="text" name="startTime" id="startTime" value="{{ startTime }}" onblur="checkTime(this)" /> End:{{ req() }} <input type="text" name="endTime" id="endTime" value="{{ endTime }}" onblur="checkTime(this)" />
+				Start:{{ req() }} <input type="text" name="startTime" id="startTime" value="{{ startTime }}" onblur="checkTime(this)" />
+				End:{{ req() }} <input type="text" name="endTime" id="endTime" value="{{ endTime }}" onblur="checkTime(this)" />
 			</div>
 			<div style="padding-top:10px">
 				<strong>Bounded area coords:</strong> <em>(the two opposite corners of the rectangle)</em><br />
